@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEB-GPS</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="../static/style.css">
+    <script src="../static/script.js"></script>
+</head>
+<body>
+    <h1>GPS</h1>
+    <div class="main-container">
+        <div id="graph"></div>
+        <div class="form-config-container"> <!-- Новый контейнер -->
+            <div class="form-container">
+                <form onsubmit="event.preventDefault(); submitConfig();">
+                    <label style="font-size: 18px; font-weight: bold">Зміна конфігурації:</label>
+                    <label for="satelliteSpeedInput">Швидкість руху супутників:</label>
+                    <input type="number" id="satelliteSpeedInput" required>
+                    <label for="objectSpeedInput">Швидкість руху об'єкта:</label>
+                    <input type="number" id="objectSpeedInput" required>
+                    <button type="submit">Отправить</button>
+                </form>
+                <div id="responseMessage"></div>
+            </div>
+            <div class="config-container">
+                <ul id="config-list">
+                    <li style="font-size: 18px; font-weight: bold">Поточна конфігурація:</li>
+                    <li>Швидкість руху супутників: <span id="satelliteSpeed">{{ json_data.satelliteSpeed }}</span></li>
+                    <li>Швидкість руху об'єкта: <span id="objectSpeed">{{ json_data.objectSpeed }}</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
