@@ -38,7 +38,7 @@ def custom_least_squares(tdoa_error_func, initial_guess, args, learning_rate=0.0
 
         # Умова зупинки
         if abs(prev_loss - loss) < tolerance:
-            print("exit", prev_loss - loss)
+            #print("exit", prev_loss - loss)
             break
 
         prev_loss = loss
@@ -72,11 +72,11 @@ delta_t12 = (1727631015326.3884 - 1727631015326.2224)/1000 * 10e8
 delta_t13 = (1727631015326.3884 - 1727631015326.3376)/1000 * 10e8
 c = 3e8 / 10e8
 
+#print(delta_t12,delta_t13)
 # Початкове припущення для координат приймача
 initial_guess = [50000, 50000]  # Оцінка десь посередині між трьома джерелами
 
 # Використання власної функції least_squares для знаходження координат приймача
-x_opt, y_opt, iterations = custom_least_squares(tdoa_error, initial_guess,
-                                                args=(x1, y1, x2, y2, x3, y3, delta_t12, delta_t13, c))
+# x_opt, y_opt, iterations = custom_least_squares(tdoa_error, initial_guess,args=(x1, y1, x2, y2, x3, y3, delta_t12, delta_t13, c))
 
-print(f"Estimated coordinates of the receiver: x = {x_opt:.2f}, y = {y_opt:.2f} after {iterations} iterations")
+#print(f"Estimated coordinates of the receiver: x = {x_opt:.2f}, y = {y_opt:.2f} after {iterations} iterations")

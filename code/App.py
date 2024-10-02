@@ -5,6 +5,7 @@ import json
 import logging
 from config import CONFIG
 import time
+from CalcObject import custom_least_squares, tdoa_error
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -58,10 +59,44 @@ async def connect_to_source():
 
 async def handle_message(message):
     try:
+        # Початкові дані
+        x1, y1 = 0, 0
+        x2, y2 = 100000, 0
+        x3, y3 = 0, 100000
+        c = 3e8 / 10e8
+        CoordObj = {}
+
+        # Початкове припущення для координат приймача
+        initial_guess = [50000, 50000]  # Оцінка десь посередині між трьома джерелами
+
         raw_data = json.loads(message)
         processed_data = process_data(raw_data)
         if processed_data not in cached_data:
             cached_data.append(processed_data)
+
+        #x_opt, y_opt, iterations = custom_least_squares(tdoa_error, initial_guess,args=(x1, y1, x2, y2, x3, y3, delta_t12, delta_t13, c))
+        source1_id = None
+        for item in cached_data:
+            if item['sourceId'] == 'source1':
+                source1_id = item['id']
+                break
+
+        if source1_id:
+            matching_items = [item for item in cached_data if item['id'] == source1_id]
+
+            if len(matching_items) == 3:
+                #print()
+                delta_t12 = (matching_items[0]['receivedAt'] - matching_items[1]['receivedAt']) / 1000 * 10e8
+                delta_t13 = (matching_items[0]['receivedAt'] - matching_items[2]['receivedAt']) / 1000 * 10e8
+                #print(delta_t12,delta_t13)
+                x_opt, y_opt, iterations = custom_least_squares(tdoa_error, initial_guess,args=(x1, y1, x2, y2, x3, y3, delta_t12, delta_t13, c))
+                #print(x_opt, y_opt)
+                CoordObj['Object'] = "Object"
+                CoordObj['x_Obj'] = x_opt/1000
+                CoordObj['y_Obj'] = y_opt/1000
+                processed_data.update(CoordObj)
+
+        print(processed_data)
         #logger.info(f"Обработано сообщение: {processed_data}")
         await notify_clients(processed_data)
     except json.JSONDecodeError:

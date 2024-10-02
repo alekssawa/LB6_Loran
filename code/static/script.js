@@ -1,9 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     let socket;
-    const statusDiv = document.getElementById('status');
+    // const statusDiv = document.getElementById('status');
     const reconnectButton = document.getElementById('reconnect');
 
-    // Инициализация графика Plotly
     const layout = {
         xaxis: { title: 'X', range: [-10, 110] },
         yaxis: { title: 'Y', range: [-10, 110] }
@@ -15,9 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
             mode: 'markers',
             type: 'scatter',
             name: 'source1',
-            text: [], // Для всплывающих подсказок
-            hoverinfo: 'text', // Указываем, что показывать в подсказке
-            marker: { size: 10, color: 'red' }
+            text: [],
+            hoverinfo: 'text',
+            marker: { size: 10, color: 'orange' }
         },
         {
             x: [],
@@ -38,10 +37,19 @@ document.addEventListener('DOMContentLoaded', function() {
             text: [], // Для всплывающих подсказок
             hoverinfo: 'text',
             marker: { size: 10, color: 'green' }
+        },
+        {
+            x: [],
+            y: [],
+            mode: 'markers',
+            type: 'scatter',
+            name: 'Object',
+            text: [],
+            hoverinfo: 'text',
+            marker: { size: 15, color: 'red' }
         }
     ];
 
-    // Проверка загрузки Plotly
     if(typeof Plotly !== 'undefined') {
         console.log("Plotly is loaded");
         Plotly.newPlot('graph', data, layout);
@@ -65,28 +73,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateGraph(data) {
-        const traceIndex = data.sourceId === 'source1' ? 0 : (data.sourceId === 'source2' ? 1 : 2);
+        let traceIndex;
 
-        const hoverText = `ID: ${data.id.slice(-4)}<br>Source: ${data.sourceId}<br>receivedAt: ${data.receivedAt}`;
+    // Проверяем, есть ли данные об источниках (source1, source2, source3)
+        traceIndex = data.sourceId === 'source1' ? 0 : (data.sourceId === 'source2' ? 1 : 2);
 
+        const hoverTextSource = `ID: ${data.id.slice(-4)}<br>Source: ${data.sourceId}<br>receivedAt: ${data.receivedAt}`;
+
+        // Добавляем точку источника на график
         Plotly.extendTraces('graph', {
             x: [[data.x]],
             y: [[data.y]],
-            text: [[hoverText]]
+            text: [[hoverTextSource]]
         }, [traceIndex]);
 
-        // Обновляем аннотацию
-        // const annotations = [{
-        //     x: data.x,
-        //     y: data.y,
-        //     text: `ID: ${data.id}<br>Source: ${data.sourceId}<br>Time: ${new Date(data.receivedAt).toLocaleTimeString()}`,
-        //     // showarrow: true,
-        //     // arrowhead: 4,
-        //     // arrowsize: 1,
-        //     // arrowwidth: 2,
-        //     // ax: 0,
-        //     // ay: -40
-        // }];
+        // Если присутствуют данные об объекте, также добавляем его на график
+        if (data.Object === 'Object') {
+            const hoverTextObject = `Object<br>ID: ${data.id.slice(-4)}<br>X: ${data.x_Obj}<br>Y: ${data.y_Obj}`;
+
+            Plotly.restyle('graph', {
+                x: [[data.x_Obj]],
+                y: [[data.y_Obj]],
+                text: [[hoverTextObject]]
+            }, [3]); // Трасса с индексом 3 для объекта
+        }
+
+        // Обновляем оси и размер графика
+        Plotly.relayout('graph', {
+            'xaxis.title': 'X',
+            'xaxis.range': [-20, 120],  // Добавляем небольшой отступ
+            'yaxis.title': 'Y',
+            'yaxis.range': [-20, 120],
+            'width': 600,
+            'height': 600
+        });
 
         Plotly.relayout('graph', {
         'xaxis.title': 'X',
@@ -95,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'yaxis.range': [-20, 120],
         'width': 600,
         'height': 600
-});
+        });
     }
 
     if (reconnectButton) {
