@@ -126,3 +126,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     connect();
 });
+
+function submitConfig() {
+    const objectSpeed = document.getElementById('objectSpeedInput').value;
+
+    const config = {
+        objectSpeed: parseInt(objectSpeed, 10),
+    };
+
+        fetch('/send-config', {  // Note: Using relative URL
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status_code === 200) {
+                document.getElementById('objectSpeed').innerText = config.objectSpeed;
+                responseMessage.innerText = 'Конфігурація успішно оновлена.';
+                responseMessage.style.color = 'green';
+            } else {
+                responseMessage.innerText = 'Помилка: ' + (data.error || 'Невідома помилка');
+                responseMessage.style.color = 'red';
+            }
+        })
+        .catch(error => {
+            console.error('Помилка:', error);
+            responseMessage.innerText = 'Помилка: ' + error.message;
+            responseMessage.style.color = 'red';
+        });
+}

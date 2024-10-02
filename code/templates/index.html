@@ -10,6 +10,25 @@
 </head>
 <body>
     <h1>Loran</h1>
-    <div id="graph"></div>
+    <div class="main-container">
+        <div id="graph"></div>
+        <div class="form-config-container"> <!-- Новый контейнер -->
+            <div class="form-container">
+                <form onsubmit="event.preventDefault(); submitConfig();">
+                    <label style="font-size: 18px; font-weight: bold">Зміна конфігурації:</label>
+                    <label for="objectSpeedInput">Швидкість руху об'єкта:</label>
+                    <input type="number" id="objectSpeedInput" required>
+                    <button type="submit">Отправить</button>
+                </form>
+                <div id="responseMessage"></div>
+            </div>
+            <div class="config-container">
+                <ul id="config-list">
+                    <li style="font-size: 18px; font-weight: bold">Поточна конфігурація:</li>
+                    <li>Швидкість руху об'єкта: <span id="objectSpeed">{{ json_data.objectSpeed }}</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

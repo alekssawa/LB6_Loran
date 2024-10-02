@@ -1,6 +1,8 @@
-from quart import Quart, render_template, jsonify, websocket
+from quart import Quart, render_template, jsonify, websocket, request
+from quart_cors import cors
 import asyncio
 import websockets
+import requests
 import json
 import logging
 from config import CONFIG
@@ -11,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 app = Quart(__name__)
+app = cors(app, allow_origin="*")
 
 # Инициализация начальных точек
 initial_points = [
@@ -125,7 +128,16 @@ async def before_serving():
 
 @app.route('/')
 async def index():
-    return await render_template('index.html')
+    url = "http://localhost:4002/config"
+    response = requests.get(url, headers={})
+
+    if response.status_code == 200:
+        json_data = response.json()
+    else:
+        json_data = {"objectSpeed": 0}  # Значения по умолчанию на случай ошибки
+
+    # Передаем json_data в шаблон index.html
+    return await render_template('index.html', json_data=json_data)
 
 
 @app.websocket('/ws')
@@ -151,6 +163,56 @@ async def ws():
 @app.route('/get-data', methods=['GET'])
 async def get_data():
     return jsonify(cached_data)
+
+@app.route('/get-config', methods=['POST'])
+async def get_config():
+    url = "http://localhost:4001/config"
+
+    response = requests.get(url, headers={"Content-Type": "application/json"})
+
+    if response.status_code == 200:
+        response_data = response.json()
+        satelliteSpeed = response_data.get('satelliteSpeed', 0)
+        objectSpeed = response_data.get('objectSpeed', 0)
+
+        return jsonify({
+            "objectSpeed": objectSpeed,
+        })
+    else:
+        return jsonify({
+            "status_code": response.status_code,
+            "error": "Не удалось получить данные"
+        })
+
+
+@app.route('/send-config', methods=['POST', 'OPTIONS'])
+async def send_config():
+    if request.method == 'OPTIONS':
+        # Preflight request. Reply successfully:
+        response = await app.make_default_options_response()
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+
+    data = await request.get_json()
+
+    url = "http://localhost:4002/config"
+
+    try:
+        response = requests.post(url,
+                                 headers={"Content-Type": "application/json"},
+                                 json=data)
+
+        return jsonify({
+            "status_code": response.status_code,
+            "response": "Конфигурация обновлена" if response.status_code == 200 else "Ошибка обновления конфигурации",
+            "updated_config": data
+        })
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            "status_code": 500,
+            "error": str(e)
+        }), 500
 
 
 if __name__ == "__main__":
